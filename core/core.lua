@@ -1,7 +1,7 @@
 local F, C, L = unpack(select(2, ...))
 
 CreateFont("xUIfonts"):SetFont(C.media.pxfont, F:Scale(8), "OUTLINE, MONOCHROME")
-CreateFont("xUIfont"):SetFont(C.media.pxfont, F:Scale(12), "OUTLINE, MONOCHROME")
+CreateFont("xUIfont"):SetFont(C.media.pxfont, F:Scale(12), "OUTLINE")
 CreateFont("xUIfontl"):SetFont(C.media.pxfont, F:Scale(16), "OUTLINE, MONOCHROME")
 
 local function install()

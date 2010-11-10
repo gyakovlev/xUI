@@ -9,6 +9,7 @@
 	<Script file="elements\chat.lua"/>
 	<Script file="elements\buffs.lua"/>
 	<Script file="elements\minimap.lua"/>
+	<Script file="elements\tooltip.lua"/>
 	<Include file="elements\actionbars\actionbars.xml"/>
 	<Include file="lib\oUF\oUF.xml"/>
 </Ui>

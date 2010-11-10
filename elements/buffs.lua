@@ -1,7 +1,7 @@
 local F, C, L = unpack(select(2, ...))
 
 local mainhand, _, _, offhand = GetWeaponEnchantInfo()
-local rowbuffs = 16
+local rowbuffs = C.buffs.numinrow
 
 TemporaryEnchantFrame:ClearAllPoints()
 TemporaryEnchantFrame:Point("TOPRIGHT", Minimap, "TOPRIGHT", 0, -16)
@@ -20,7 +20,7 @@ TempEnchant2:Point("RIGHT", TempEnchant1, "LEFT", -5, 0)
 
 for i = 1, 2 do
 	local border = F:CreatePanel(nil, _G["TempEnchant"..i])
-	_G["TempEnchant"..i]:Size(30)
+	_G["TempEnchant"..i]:Size(C.buffs.size)
 	border:Point("TOPLEFT", _G["TempEnchant"..i])
 	border:Point("BOTTOMRIGHT", _G["TempEnchant"..i])
 	border:SetFrameLevel(_G["TempEnchant"..i]:GetFrameLevel() - 1)
@@ -46,7 +46,7 @@ local function stylebuffs(buttonname, index, debuff)
 		icon:Point("TOPLEFT", buff, 1, -1)
 		icon:Point("BOTTOMRIGHT", buff, -1, 1)
 
-		buff:Size(30)
+		buff:Size(C.buffs.size)
 
 		duration:ClearAllPoints()
 		duration:Point("BOTTOM", 0, -10)
@@ -57,7 +57,7 @@ local function stylebuffs(buttonname, index, debuff)
 		count:SetFontObject("xUIfont")
 		
 		local panel = F:CreatePanel(buttonname..index.."Panel", buff)
-		panel:Size(30)
+		panel:Size(C.buffs.size)
 		panel:SetPoint("CENTER")
 		panel:SetFrameLevel(buff:GetFrameLevel() - 1)
 		panel:SetFrameStrata(buff:GetFrameStrata())
