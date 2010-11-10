@@ -54,6 +54,16 @@ local function settemplate(frame)
 	frame:SetBackdropBorderColor(unpack(C.border))
 end
 
+local function setpanel(frame)
+	local f=CreateFrame("Frame","$parent_xPanel")
+	f:SetFrameLevel(frame:GetFrameLevel()-1)
+	f:SetPoint("TOPLEFT", frame, "TOPLEFT", scale(-2), 2)
+	f:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", scale(2), -2)
+	f:SetBackdrop(F.backdrop)
+	f:SetBackdropColor(unpack(C.bg))
+	f:SetBackdropBorderColor(unpack(C.border))
+end
+
 local function createpanel(...)
 	panel = CreateFrame("Frame", ...)
 	settemplate(panel)
@@ -65,6 +75,7 @@ local function inject(obj)
 	mt.Size = size
 	mt.Point = point
 	mt.SetTemplate = settemplate
+	mt.SetPanel = setpanel
 	mt.Die = destroy
 end
 
@@ -91,5 +102,6 @@ end
 set("Scale", scale)
 set("Destroy", destroy)
 set("SetTemplate", settemplate)
+set("SetPanel", setpanel)
 set("CreatePanel", createpanel)
 

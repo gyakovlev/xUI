@@ -10,7 +10,6 @@ for i=1,NUM_CHAT_WINDOWS do
 	local tab = _G[chat.."Tab"]
 	local ebox = _G[chat.."EditBox"]
 	
-	_G[chat]:SetTemplate()
 	_G[chat]:SetClampRectInsets(0,0,0,0)
 	_G[chat]:SetFading(false)
 	
