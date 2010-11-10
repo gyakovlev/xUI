@@ -1,0 +1,7 @@
+## Interface: 40000
+## Title: |cffFF0000x|rUI
+## Notes: X User Interface
+## Author: Affli @ RU-Howling Fjord
+## Version: 1
+
+xUI.xml
