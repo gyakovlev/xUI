@@ -8,12 +8,13 @@
 	<Script file="bar5.lua"/>
 	<Script file="stancebar.lua"/>
 	
-
 	<Script file="petbar.lua"/>
 	<Script file="totembar.lua"/>
 	<Script file="vehicleexit.lua"/>
 	<Script file="bags.lua"/>
 	<Script file="micromenu.lua"/>
+	
+	<Include file="buttons\buttons.xml"/>
 </Ui>
 
 
