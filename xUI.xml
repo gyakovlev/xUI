@@ -1,6 +1,8 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">	
 	<Script file="core\init.lua"/>
-	
+	<Script file="config.lua"/>
+	<Script file="core\functions.lua"/>
+
 	<Include file="lib\oUF\oUF.xml"/>
 </Ui>
 
