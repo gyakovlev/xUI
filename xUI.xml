@@ -2,7 +2,19 @@
 	<Script file="core\init.lua"/>
 	<Script file="config.lua"/>
 	<Script file="core\functions.lua"/>
-
+	
+	<Script file="modules\slash.lua"/>
+	
 	<Include file="lib\oUF\oUF.xml"/>
+
+	<Script file="elements\fonts.lua"/>
+	<Script file="elements\buffs.lua"/>
+	<Script file="elements\chat.lua"/>
+	<Script file="elements\minimap.lua"/>
+	<Script file="elements\tooltip.lua"/>
+	<Script file="elements\unitframes.lua"/>
+
+
+	
 </Ui>
 
