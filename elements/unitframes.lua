@@ -1,299 +1,185 @@
---[[
-
-  Adrian L Lange grants anyone the right to use this work for any purpose,
-  without any conditions, unless such conditions are required by law.
-
---]]
 local F, C, L = unpack(select(2, ...))
 local oUF = select(2, ...).oUF
-local FONT = [=[Interface\AddOns\xUI\media\fonts\uni05_53.ttf]=]
-local TEXTURE = [=[Interface\ChatFrame\ChatFrameBackground]=]
-local BACKDROP = {
-	bgFile = TEXTURE, insets = {top = -1, bottom = -1, left = -1, right = -1}
-}
 
-local function ShortenValue(value)
-	if(value >= 1e6) then
-		return ('%.2fm'):format(value / 1e6):gsub('%.?0+([km])$', '%1')
-	elseif(value >= 1e4) then
-		return ('%.1fk'):format(value / 1e3):gsub('%.?0+([km])$', '%1')
-	else
-		return value
+local oUF_colors = setmetatable({
+	tapped = {0.55, 0.57, 0.61},
+	disconnected = {0.84, 0.75, 0.65},
+	power = setmetatable({
+		["MANA"] = {0.31, 0.45, 0.63},
+		["RAGE"] = {0.69, 0.31, 0.31},
+		["FOCUS"] = {0.71, 0.43, 0.27},
+		["ENERGY"] = {0.65, 0.63, 0.35},
+		["RUNES"] = {0.55, 0.57, 0.61},
+		["RUNIC_POWER"] = {0, 0.82, 1},
+		["AMMOSLOT"] = {0.8, 0.6, 0},
+		["FUEL"] = {0, 0.55, 0.5},
+		["POWER_TYPE_STEAM"] = {0.55, 0.57, 0.61},
+		["POWER_TYPE_PYRITE"] = {0.60, 0.09, 0.17},
+	}, {__index = oUF.colors.power}),
+	happiness = setmetatable({
+		[1] = {.69,.31,.31},
+		[2] = {.65,.63,.35},
+		[3] = {.33,.59,.33},
+	}, {__index = oUF.colors.happiness}),
+	runes = setmetatable({
+			[1] = {.69,.31,.31},
+			[2] = {.33,.59,.33},
+			[3] = {.31,.45,.63},
+			[4] = {.84,.75,.65},
+	}, {__index = oUF.colors.runes}),
+	reaction = setmetatable({
+		[1] = { 222/255, 95/255,  95/255 }, -- Hated
+		[2] = { 222/255, 95/255,  95/255 }, -- Hostile
+		[3] = { 222/255, 95/255,  95/255 }, -- Unfriendly
+		[4] = { 218/255, 197/255, 92/255 }, -- Neutral
+		[5] = { 75/255,  175/255, 76/255 }, -- Friendly
+		[6] = { 75/255,  175/255, 76/255 }, -- Honored
+		[7] = { 75/255,  175/255, 76/255 }, -- Revered
+		[8] = { 75/255,  175/255, 76/255 }, -- Exalted	
+	}, {__index = oUF.colors.reaction}),
+	class = setmetatable({
+		["DEATHKNIGHT"] = { 196/255,  30/255,  60/255 },
+		["DRUID"]       = { 255/255, 125/255,  10/255 },
+		["HUNTER"]      = { 171/255, 214/255, 116/255 },
+		["MAGE"]        = { 104/255, 205/255, 255/255 },
+		["PALADIN"]     = { 245/255, 140/255, 186/255 },
+		["PRIEST"]      = { 212/255, 212/255, 212/255 },
+		["ROGUE"]       = { 255/255, 243/255,  82/255 },
+		["SHAMAN"]      = {  41/255,  79/255, 155/255 },
+		["WARLOCK"]     = { 148/255, 130/255, 201/255 },
+		["WARRIOR"]     = { 199/255, 156/255, 110/255 },
+	}, {__index = oUF.colors.class}),
+}, {__index = oUF.colors})
+
+------------------------------------------------------------------------------
+--	oUF_barebones
+--	Bare minimum for getting an oUF layout up and running
+------------------------------------------------------------------------------
+--	credits:
+--	Haste (oUF)
+--		http://www.wowinterface.com/downloads/info9994-oUF.html
+--	zork (oUF Tutorial)
+--		http://www.wowinterface.com/forums/showthread.php?t=33566
+------------------------------------------------------------------------------
+
+--	configuration
+local BAR_TEXTURE = "Interface\\TargetingFrame\\UI-StatusBar"
+local BAR_WIDTH = 192
+local HP_HEIGHT = 20
+local PP_HEIGHT = 8
+local BORDER = 4
+
+local TEXT_FACE = "NumberFont_Shadow_Small"
+
+------------------------------------------------------------------------------
+
+-- generate the frames
+local function CreateUnitFrame(self, unit)
+
+	-- our colors
+	self.colors = oUF_colors
+	-- size the overall unit frame
+	self:SetSize(BAR_WIDTH + 2 * BORDER, HP_HEIGHT + PP_HEIGHT + 3 * BORDER)
+
+	local parent=CreateFrame("Frame", nil, self)
+	parent:SetAllPoints()
+	parent:SetFrameStrata"HIGH"
+
+	-- create background
+--	local unitBackground = self:CreateTexture(nil, "ARTWORK")
+--	unitBackground:SetAllPoints(self)
+--	unitBackground:SetTexture(0, 0, 0, 1)
+	
+	------------------------
+	-- health bar
+	------------------------
+	local hpBar = CreateFrame("StatusBar", nil, self)
+	hpBar:SetStatusBarTexture(BAR_TEXTURE)
+	hpBar:SetSize(BAR_WIDTH, HP_HEIGHT)
+	hpBar:SetPoint("TOP", parent, "TOP", 0, -BORDER)
+	
+	-- > see "oUF/elements/health.lua" for health bar coloring options
+	hpBar.colorTapping = true
+	hpBar.frequentUpdates = true
+	hpBar.colorDisconnected = true
+	hpBar.colorHappiness = true
+	hpBar.colorClass = true
+	hpBar.colorReaction = true
+	hpBar.colorSmooth = true
+--	hpBar.smoothGradient = {47/255, 107/255, 77/255}
+--	hpBar.colorHealth = true
+	hpBar.Smooth = true
+	
+	self.Health = hpBar
+
+	local hpBarBG = hpBar:CreateTexture(nil, "BORDER")
+	hpBarBG:SetAllPoints()
+--	hpBarBG:SetAround()
+	hpBarBG:SetTexture(1, 0, 0, .9)
+	hpBarBG.multiplier = .5
+	
+	self.Health.bg = hpBarBG
+
+	------------------------
+	-- power bar
+	------------------------
+	local ppBar = CreateFrame("StatusBar", nil, self)
+	ppBar:SetStatusBarTexture(BAR_TEXTURE)
+	ppBar:SetSize(BAR_WIDTH, PP_HEIGHT)
+	ppBar:SetPoint("TOP", hpBar, "BOTTOM", 0, -BORDER)
+	
+	-- > see "oUF/elements/power.lua" for power bar coloring options
+	ppBar.frequentUpdates = true
+	ppBar.colorPower = true
+	
+	self.Power = ppBar
+
+	
+	------------------------
+	-- unit health text
+	------------------------
+	local hpText = hpBar:CreateFontString(nil, "Overlay")
+	hpText:SetFontObject(TEXT_FACE)
+	hpText:SetJustifyH("RIGHT")
+	hpText:SetPoint("RIGHT", hpBar, "RIGHT", -4, 0)
+	
+	-- > "see oUF/elements/tags.lua" for provided tags
+	self:Tag(hpText, "[status] [curhp]/[maxhp]")
+	
+	------------------------
+	-- unit name text
+	------------------------
+--	local Name
+	if unit~="player" then
+	local Name = hpBar:CreateFontString(nil, "Overlay")
+	Name:SetFontObject(TEXT_FACE)
+	Name:SetJustifyH("LEFT")
+	Name:SetPoint("LEFT", hpBar, "LEFT", 4, 0)
+	
+	-- > see "oUF/elements/tags.lua" for provided tags
+	self:Tag(Name, "[smartlevel] [name]")
+	-- allow the name to be cut off with "..." if it's too long
+	Name:SetPoint("RIGHT", hpText, "LEFT", 0, 0)
 	end
+	
+
+	
+
+	
 end
 
-oUF.TagEvents['p3lim:threat'] = 'UNIT_THREAT_LIST_UPDATE'
-oUF.Tags['p3lim:threat'] = function(unit)
-	local tanking, status, percent = UnitDetailedThreatSituation('player', 'target')
-	if(percent and percent > 0) then
-		return ('%s%d%%|r'):format(Hex(GetThreatStatusColor(status)), percent)
-	end
-end
+------------------------------------------------------------------------------
 
-oUF.Tags['p3lim:health'] = function(unit)
-	local min, max = UnitHealth(unit), UnitHealthMax(unit)
-	local status = not UnitIsConnected(unit) and 'Offline' or UnitIsGhost(unit) and 'Ghost' or UnitIsDead(unit) and 'Dead'
+oUF:RegisterStyle("oUF_barebones", CreateUnitFrame)
 
-	if(status) then
-		return status
-	elseif(unit == 'target' and UnitCanAttack('player', unit)) then
-		return ('%s (%d|cff0090ff%%|r)'):format(ShortenValue(min), min / max * 100)
-	elseif(unit == 'player' and min ~= max) then
-		return ('|cffff8080%d|r %d|cff0090ff%%|r'):format(min - max, min / max * 100)
-	elseif(min ~= max) then
-		return ('%s |cff0090ff/|r %s'):format(ShortenValue(min), ShortenValue(max))
-	else
-		return max
-	end
-end
+oUF:SetActiveStyle("oUF_barebones")
 
-oUF.Tags['p3lim:power'] = function(unit)
-	local power = UnitPower(unit)
-	if(power > 0 and not UnitIsDeadOrGhost(unit)) then
-		local _, type = UnitPowerType(unit)
-		local colors = _COLORS.power
-		return ('%s%d|r'):format(Hex(colors[type] or colors['RUNES']), power)
-	end
-end
+-- spawn and then position the player frame
+local player = oUF:Spawn("player", "oUF_player")
+player:SetPoint("CENTER", UIParent, "CENTER", -192, -192)
 
-oUF.Tags['p3lim:druid'] = function(unit)
-	local min, max = UnitPower(unit, 0), UnitPowerMax(unit, 0)
-	if(UnitPowerType(unit) ~= 0 and min ~= max) then
-		return ('|cff0090ff%d%%|r'):format(min / max * 100)
-	end
-end
-
-oUF.TagEvents['p3lim:name'] = 'UNIT_NAME_UPDATE UNIT_REACTION UNIT_FACTION'
-oUF.Tags['p3lim:name'] = function(unit)
-	local reaction = UnitReaction(unit, 'player')
-
-	local r, g, b = 1, 1, 1
-	if((UnitIsTapped(unit) and not UnitIsTappedByPlayer(unit)) or not UnitIsConnected(unit)) then
-		r, g, b = 3/5, 3/5, 3/5
-	elseif(not UnitIsPlayer(unit) and reaction) then
-		r, g, b = unpack(_COLORS.reaction[reaction])
-	elseif(UnitFactionGroup(unit) and UnitIsEnemy(unit, 'player') and UnitIsPVP(unit)) then
-		r, g, b = 1, 0, 0
-	end
-
-	return ('%s%s|r'):format(Hex(r, g, b), UnitName(unit))
-end
-
-local function SpawnMenu(self)
-	ToggleDropDownMenu(1, nil, _G[string.gsub(self.unit, '^.', string.upper)..'FrameDropDown'], 'cursor')
-end
-
-local function PostUpdatePower(element, unit, min, max)
-	element:GetParent().Health:SetHeight(max ~= 0 and 20 or 22)
-end
-
-local function PostCreateAura(element, button)
---	button:Template()
-	F:SetTemplate(button)
---	button:SetBackdrop(BACKDROP)
---	button:SetBackdropColor(0, 0, 0)
-	button.icon:Point("TOPLEFT", 2, -2)
-	button.icon:Point("BOTTOMRIGHT", -2, 2)
-	button.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-	button.icon:SetDrawLayer('ARTWORK')
-	button.cd:SetReverse()
-	button.cd:SetAllPoints(button.icon)
-end
-
-local function PostUpdateDebuff(element, unit, button, index)
-	if(UnitIsFriend('player', unit) or button.isPlayer) then
-		local _, _, _, _, type = UnitAura(unit, index, button.filter)
-		local color = DebuffTypeColor[type] or DebuffTypeColor.none
-
-		button:SetBackdropColor(color.r * 3/5, color.g * 3/5, color.b * 3/5)
-		button.icon:SetDesaturated(false)
-	else
-		button:SetBackdropColor(0, 0, 0)
-		button.icon:SetDesaturated(true)
-	end
-end
-
-local UnitSpecific = {
-	player = function(self)
-		local leader = self.Health:CreateTexture(nil, 'OVERLAY')
-		leader:SetPoint('TOPLEFT', self, 0, 8)
-		leader:SetSize(16, 16)
-		self.Leader = leader
-
-		local assistant = self.Health:CreateTexture(nil, 'OVERLAY')
-		assistant:SetPoint('TOPLEFT', self, 0, 8)
-		assistant:SetSize(16, 16)
-		self.Assistant = assistant
-
-		local info = self.Health:CreateFontString(nil, 'OVERLAY')
-		info:SetPoint('CENTER')
-		info:SetFont(FONT, 8, 'OUTLINEMONOCHROME')
-		self:Tag(info, '[p3lim:threat]')
-
-		self:SetWidth(230)
-	end,
-	target = function(self)
-		local buffs = CreateFrame('Frame', nil, self)
-		buffs:SetPoint('TOPLEFT', self, 'TOPRIGHT', 4, 0)
-		buffs:SetSize(236, 44)
-		buffs.num = 20
-		buffs.size = F:Scale(26)
-		buffs.spacing = 4
-		buffs.initialAnchor = 'TOPLEFT'
-		buffs['growth-y'] = 'DOWN'
-		buffs.PostCreateIcon = PostCreateAura
-		self.Buffs = buffs
-
-		local cpoints = self:CreateFontString(nil, 'OVERLAY', 'SubZoneTextFont')
-		cpoints:SetPoint('RIGHT', self, 'LEFT', -9, 0)
-		cpoints:SetJustifyH('RIGHT')
-		self:Tag(cpoints, '|cffffffff[cpoints]|r')
-
-		self.Power.PostUpdate = PostUpdatePower
-		self:SetWidth(230)
-	end,
-	pet = function(self)
-		local auras = CreateFrame('Frame', nil, self)
-		auras:SetPoint('TOPRIGHT', self, 'TOPLEFT', -4, 0)
-		auras:SetSize(236, 44)
-		auras.size = 20
-		auras.spacing = 4
-		auras.initialAnchor = 'TOPRIGHT'
-		auras['growth-x'] = 'LEFT'
-		auras.PostCreateIcon = PostCreateAura
-		self.Auras = auras
-
-		self:SetWidth(130)
-	end,
-}
-
-local function Shared(self, unit)
-	self.colors.power.MANA = {0, 144/255, 1}
-
-	-- XXX: Change to AnyUp when RegisterAttributeDriver doesn't cause clicks
-	self:RegisterForClicks('AnyDown')
-	self:SetScript('OnEnter', UnitFrame_OnEnter)
-	self:SetScript('OnLeave', UnitFrame_OnLeave)
-
-	self:SetBackdrop(BACKDROP)
-	self:SetBackdropColor(0, 0, 0)
-
-	local health = CreateFrame('StatusBar', nil, self)
-	health:SetStatusBarTexture(TEXTURE)
-	health:SetStatusBarColor(1/6, 1/6, 2/7)
-	health.frequentUpdates = true
-	self.Health = health
-
---	local healthBG = health:CreateTexture(nil, 'BORDER')
---	healthBG:SetAllPoints()
---	healthBG:SetTexture(1/3, 1/3, 1/3)
-
-	local healthBG = health:Panel(self)
-	healthBG:SetRelPoints(health)
+-- spawn and then position the target frame
+local target = oUF:Spawn("target", "oUF_target")
+target:SetPoint("CENTER", UIParent, "CENTER", 192, -192)
 
 
-	local healthValue = health:CreateFontString(nil, 'OVERLAY')
-	healthValue:SetPoint('RIGHT', health, -2, 0)
-	healthValue:SetFont(FONT, 8, 'OUTLINEMONOCHROME')
-	healthValue:SetJustifyH('RIGHT')
-	healthValue.frequentUpdates = 1/4
-	self:Tag(healthValue, '[p3lim:health]')
-
-	if(unit == 'player' or unit == 'target' or unit == 'pet') then
-		local power = CreateFrame('StatusBar', nil, self)
-		power:SetPoint('BOTTOMRIGHT')
-		power:SetPoint('BOTTOMLEFT')
-		power:SetPoint('TOP', health, 'BOTTOM', 0, -1)
-		power:SetStatusBarTexture(TEXTURE)
-		power.frequentUpdates = true
-		self.Power = power
-
-		power.colorClass = true
-		power.colorTapping = true
-		power.colorDisconnected = true
-		power.colorReaction = unit ~= 'pet'
-		power.colorHappiness = unit == 'pet'
-		power.colorPower = unit == 'pet'
-
-		local powerBG = power:CreateTexture(nil, 'BORDER')
-		powerBG:SetAllPoints()
-		powerBG:SetTexture(TEXTURE)
-		powerBG.multiplier = 1/3
-		power.bg = powerBG
-
-		if(unit ~= 'target') then
-			local powerValue = health:CreateFontString(nil, 'OVERLAY')
-			powerValue:SetPoint('LEFT', health, 2, 0)
-			powerValue:SetFont(FONT, 8, 'OUTLINEMONOCHROME')
-			powerValue:SetJustifyH('LEFT')
-			powerValue.frequentUpdates = 0.1
-			self:Tag(powerValue, '[p3lim:power< ][p3lim:druid]')
-		end
-
-		local raidicon = health:CreateTexture(nil, 'OVERLAY')
-		raidicon:SetPoint('TOP', self, 0, 8)
-		raidicon:SetSize(16, 16)
-		self.RaidIcon = raidicon
-
-		health:SetHeight(20)
-		health:SetPoint('TOPRIGHT')
-		health:SetPoint('TOPLEFT')
-
-		self.menu = SpawnMenu
-		self:SetHeight(22)
-	end
-
-	if(unit == 'focus' or unit:find('target')) then
-		local name = health:CreateFontString(nil, 'OVERLAY')
-		name:SetPoint('LEFT', health, 2, 0)
-		name:SetPoint('RIGHT', healthValue, 'LEFT')
-		name:SetFont(FONT, 8, 'OUTLINE')
-		name:SetJustifyH('LEFT')
-		self:Tag(name, '[p3lim:name< ][|cff0090ff>rare<|r]')
-
-		local debuffs = CreateFrame('Frame', nil, self)
-		debuffs.spacing = 4
-		debuffs.initialAnchor = 'TOPLEFT'
-		debuffs.PostCreateIcon = PostCreateAura
-		self.Debuffs = debuffs
-
-		if(unit == 'target') then
-			debuffs.num = 20
-			debuffs.size = 19.4
-			debuffs['growth-y'] = 'DOWN'
-			debuffs.PostUpdateIcon = PostUpdateDebuff
-			debuffs:SetPoint('TOPLEFT', self, 'BOTTOMLEFT', 0, -4)
-		else
-			debuffs.num = 3
-			debuffs.size = 19
-
-			health:SetAllPoints()
-			self:SetSize(161, 19)
-		end
-
-		if(unit == 'focus') then
-			debuffs:SetPoint('TOPLEFT', self, 'TOPRIGHT')
-			debuffs.onlyShowPlayer = true
-		elseif(unit ~= 'target') then
-			debuffs:SetPoint('TOPRIGHT', self, 'TOPLEFT', -4, 0)
-			debuffs.initialAnchor = 'TOPRIGHT'
-			debuffs['growth-x'] = 'LEFT'
-		end
-
-		debuffs:SetSize(230, debuffs.size)
-	end
-
-	if(UnitSpecific[unit]) then
-		return UnitSpecific[unit](self)
-	end
-end
-
-oUF:RegisterStyle('P3lim', Shared)
-oUF:Factory(function(self)
-	self:SetActiveStyle('P3lim')
-	self:Spawn('player'):SetPoint('CENTER', -300, -250)
-	self:Spawn('pet'):SetPoint('CENTER', -490, -250)
-	self:Spawn('focus'):SetPoint('CENTER', -335, -225)
-	self:Spawn('target'):SetPoint('CENTER', 300, -250)
-	self:Spawn('targettarget'):SetPoint('CENTER', 334, -225)
-end)

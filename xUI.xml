@@ -2,10 +2,12 @@
 	<Script file="core\init.lua"/>
 	<Script file="config.lua"/>
 	<Script file="core\functions.lua"/>
+	<Script file="core\var.lua"/>
 	
 	<Script file="modules\slash.lua"/>
 	
 	<Include file="lib\oUF\oUF.xml"/>
+	<Script file="lib\oUF_Smooth\oUF_Smooth.lua"/>
 
 	<Script file="elements\fonts.lua"/>
 	<Script file="elements\buffs.lua"/>

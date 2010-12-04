@@ -38,12 +38,20 @@ local function size(frame, w, h)
 	frame:SetSize(scale(w), scale(h))
 end
 
-local function relpoints(obj, parent)
+local function setaround(obj, parent)
 	if not parent then
 		parent=obj:GetParent()
 	end
 	obj:SetPoint("TOPLEFT", parent, "TOPLEFT", scale(-2), scale(2))
 	obj:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", scale(2), scale(-2))
+end
+
+local function setinside(obj, parent)
+	if not parent then
+		parent=obj:GetParent()
+	end
+	obj:SetPoint("TOPLEFT", parent, "TOPLEFT", scale(2), scale(-2))
+	obj:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", scale(-2), scale(2))
 end
 
 local function point(obj, arg1, arg2, arg3, arg4, arg5)
@@ -71,7 +79,8 @@ local function inject(obj)
 	local mt = getmetatable(obj).__index
 	mt.Size = size
 	mt.Point = point
-	mt.SetRelPoints = relpoints
+	mt.SetAround = setaround
+	mt.SetInside = setinside
 	mt.Template = settemplate
 	mt.Panel = createpanel
 	mt.Die = destroy
@@ -102,3 +111,5 @@ set("Scale", scale)
 set("Destroy", destroy)
 set("SetTemplate", settemplate)
 set("CreatePanel", createpanel)
+set("SetAround", setaround)
+set("SetInside", setinside)
